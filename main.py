@@ -40,6 +40,8 @@ class Jugador():
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
         self.vel_y = 0
         self.jumped = False
         self.direction = 0
@@ -91,6 +93,23 @@ class Jugador():
         dy += self.vel_y
 
         # Detectar colisiones
+        for tile in world.tile_list:
+            #checar en x y y de manera separada
+            #en x
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y , self.width, self.height):
+                dx = 0 # para que deje de moverse 
+            #en y
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy , self.width, self.height):
+                #checar si abajo del ground ie jumping
+                if self.vel_y < 0:
+                    dy = tile[1].bottom -self.rect.top
+                    self.vel_y = 0
+                #checar si abajo del ground ie falling
+                elif self.vel_y >= 0:
+                    dy = tile[1].top -self.rect.bottom
+                    self.vel_y = 0
+
+
 
         # Actualizar las coordenadas del jugador
         self.rect.x += dx
@@ -100,8 +119,10 @@ class Jugador():
             self.rect.bottom = screen_height
             dy = 0
 
-        # Dibujar jugador
+        # Dibujar jugador EN LA PLANTALLA
         screen.blit(self.image, self.rect)
+        # dibujamos el recatngulo de para el elemento del jugador
+        pygame.draw.rect(screen, (255,255,255), self.rect, 2)
 
 
 class World():
@@ -121,6 +142,7 @@ class World():
                     img = pygame.transform.scale(dirt_img, (tile_size, tile_size))
                     # pero necesito saber donde la voy a poner
                     img_rect = img.get_rect()
+
                     img_rect.x = col_count * tile_size
                     img_rect.y = row_count * tile_size
                     tile = (img, img_rect)
@@ -133,12 +155,18 @@ class World():
                     img_rect.y = row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
+                if tile == 3:
+                    blob = Enemigo(col_count * tile_size, row_count * tile_size + 15)
+                    blob_group.add(blob)
+                    
                 col_count += 1
             row_count += 1
 
     def draw(self):
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
+            #dibujamos el rectangulo para cada elemento
+            pygame.draw.rect(screen, (255,255,255), tile[1], 2)
 
 
 # esto es lo que me va a permitir ubicar las cosas que quiero mostrar
@@ -165,8 +193,27 @@ world_data = [
     [1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
+class Enemigo(pygame.sprite.Sprite): #por default ya tiene un  metodo de update esto que estamos importando
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('img/blob.png')
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y 
+        self.move_direction = 1
+        self.move_counter = 0
+    
+    def update(self):
+        ##moviendolos derecha e ixquierda
+        self.rect.x += self.move_direction
+        self.move_counter += 1
+        if abs(self.move_counter) > 50:
+            self.move_direction *= -1
+            self.move_counter *= -1
+
 # Creación de instancias
 jugador = Jugador(100, screen_height - 130)
+blob_group = pygame.sprite.Group() #crea un nuevo grupo vacio para despues poder añadirle enemigos
 world = World(world_data)
 
 # necesitamos un loop para que la ventana se muestre mucho tiempo
@@ -181,6 +228,10 @@ while run:
     screen.blit(sun_img, (100, 100))
 
     world.draw()
+
+
+    blob_group.update()
+    blob_group.draw(screen)
 
     jugador.update()
 
