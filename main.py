@@ -15,6 +15,7 @@ pygame.display.set_caption("El super juego de Vale, Chris y Sebas")
 
 # Variables del juego
 tile_size = 50
+game_over = 0;
 
 # cargar imagenes
 sun_img = pygame.image.load('img/sun.png')
@@ -35,6 +36,7 @@ class Jugador():
             img_left = pygame.transform.flip(img_right, True, False)
             self.images_right.append(img_right)
             self.images_left.append(img_left)
+        self.dead_image = pygame.image.load('img/ghost.png')
         self.image = self.images_right[self.index]
 
         self.rect = self.image.get_rect()
@@ -46,83 +48,93 @@ class Jugador():
         self.jumped = False
         self.direction = 0
 
-    def update(self):
+    def update(self, game_over):
         dx = 0  # Variables creadas para detectar colisiones
         dy = 0
         walk_cooldown = 5
 
-        # Obtener clics
-        key = pygame.key.get_pressed()
-        if key[pygame.K_SPACE] and self.jumped == False:
-            self.vel_y = -15
-            self.jumped = True
-        if key[pygame.K_SPACE] == False:
-            self.jumped = False
-        if key[pygame.K_LEFT]:
-            dx -= 5  # Le restamos 5 pixeles a la posición
-            self.counter += 1
-            self.direction = -1
-        if key[pygame.K_RIGHT]:
-            dx += 5
-            self.counter += 1
-            self.direction = 1
-        #Si no se toca ninguna tecla regresaremos a la imagen original
-        if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:
-            self.counter = 0
-            self.index = 0
-            if self.direction == 1:
-                self.image = self.images_right[self.index]
-            if self.direction == -1:
-                self.image = self.images_left[self.index]
-
-        #Manejo de animación
-        if self.counter > walk_cooldown:    #Neceario para la velocidad de caminata
-            self.counter = 0
-            self.index += 1
-            if self.index >= len(self.images_right):
+        if game_over == 0:
+        
+            # Obtener clics
+            key = pygame.key.get_pressed()
+            if key[pygame.K_SPACE] and self.jumped == False:
+                self.vel_y = -15
+                self.jumped = True
+            if key[pygame.K_SPACE] == False:
+                self.jumped = False
+            if key[pygame.K_LEFT]:
+                dx -= 5  # Le restamos 5 pixeles a la posición
+                self.counter += 1
+                self.direction = -1
+            if key[pygame.K_RIGHT]:
+                dx += 5
+                self.counter += 1
+                self.direction = 1
+            #Si no se toca ninguna tecla regresaremos a la imagen original
+            if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:
+                self.counter = 0
                 self.index = 0
-            if self.direction == 1:
-                self.image = self.images_right[self.index]
-            if self.direction == -1:
-                self.image = self.images_left[self.index]
+                if self.direction == 1:
+                    self.image = self.images_right[self.index]
+                if self.direction == -1:
+                    self.image = self.images_left[self.index]
 
-        # Agregar gravedad
-        self.vel_y += 1
-        if self.vel_y > 10:
-            self.vel_y = 10
-        dy += self.vel_y
+            #Manejo de animación
+            if self.counter > walk_cooldown:    #Neceario para la velocidad de caminata
+                self.counter = 0
+                self.index += 1
+                if self.index >= len(self.images_right):
+                    self.index = 0
+                if self.direction == 1:
+                    self.image = self.images_right[self.index]
+                if self.direction == -1:
+                    self.image = self.images_left[self.index]
 
-        # Detectar colisiones
-        for tile in world.tile_list:
-            #checar en x y y de manera separada
-            #en x
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y , self.width, self.height):
-                dx = 0 # para que deje de moverse 
-            #en y
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy , self.width, self.height):
-                #checar si abajo del ground ie jumping
-                if self.vel_y < 0:
-                    dy = tile[1].bottom -self.rect.top
-                    self.vel_y = 0
-                #checar si abajo del ground ie falling
-                elif self.vel_y >= 0:
-                    dy = tile[1].top -self.rect.bottom
-                    self.vel_y = 0
+            # Agregar gravedad
+            self.vel_y += 1
+            if self.vel_y > 10:
+                self.vel_y = 10
+            dy += self.vel_y
 
+            # Detectar colisiones
+            for tile in world.tile_list:
+                #checar en x y y de manera separada
+                #en x
+                if tile[1].colliderect(self.rect.x + dx, self.rect.y , self.width, self.height):
+                    dx = 0 # para que deje de moverse 
+                #en y
+                if tile[1].colliderect(self.rect.x, self.rect.y + dy , self.width, self.height):
+                    #checar si abajo del ground ie jumping
+                    if self.vel_y < 0:
+                        dy = tile[1].bottom -self.rect.top
+                        self.vel_y = 0
+                    #checar si abajo del ground ie falling
+                    elif self.vel_y >= 0:
+                        dy = tile[1].top -self.rect.bottom
+                        self.vel_y = 0
 
+            #colision con los enemigos
+            if pygame.sprite.spritecollide(self, blob_group,False):
+                game_over = -1
+            #colision con lava
+            if pygame.sprite.spritecollide(self, lava_group,False):
+                game_over = -1
+                print(game_over)
 
-        # Actualizar las coordenadas del jugador
-        self.rect.x += dx
-        self.rect.y += dy
-
-        if self.rect.bottom > screen_height:
-            self.rect.bottom = screen_height
-            dy = 0
+            # Actualizar las coordenadas del jugador
+            self.rect.x += dx
+            self.rect.y += dy
+        elif game_over == -1:
+            self.image = self.dead_image
+            if self.rect.y > 200:
+                self.rect.y -= 5
 
         # Dibujar jugador EN LA PLANTALLA
         screen.blit(self.image, self.rect)
         # dibujamos el recatngulo de para el elemento del jugador
         pygame.draw.rect(screen, (255,255,255), self.rect, 2)
+            
+        return game_over
 
 
 class World():
@@ -158,6 +170,10 @@ class World():
                 if tile == 3:
                     blob = Enemigo(col_count * tile_size, row_count * tile_size + 15)
                     blob_group.add(blob)
+                if tile == 6:
+                    lava =  Lava(col_count * tile_size, row_count * tile_size + int(tile_size // 2))
+                    lava_group.add(lava)
+                    
                     
                 col_count += 1
             row_count += 1
@@ -211,9 +227,19 @@ class Enemigo(pygame.sprite.Sprite): #por default ya tiene un  metodo de update 
             self.move_direction *= -1
             self.move_counter *= -1
 
+class Lava(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        img =  pygame.image.load('img/lava.png')
+        self.image = pygame.transform.scale(img, (tile_size, tile_size // 2))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y 
+
 # Creación de instancias
 jugador = Jugador(100, screen_height - 130)
 blob_group = pygame.sprite.Group() #crea un nuevo grupo vacio para despues poder añadirle enemigos
+lava_group = pygame.sprite.Group()
 world = World(world_data)
 
 # necesitamos un loop para que la ventana se muestre mucho tiempo
@@ -229,11 +255,12 @@ while run:
 
     world.draw()
 
+    if game_over == 0:
+        blob_group.update()
+        blob_group.draw(screen)
+        lava_group.draw(screen)
 
-    blob_group.update()
-    blob_group.draw(screen)
-
-    jugador.update()
+    game_over = jugador.update(game_over)
 
     for event in pygame.event.get():
         # EL BOTON DE X
