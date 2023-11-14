@@ -15,13 +15,15 @@ pygame.display.set_caption("El super juego de Vale, Chris y Sebas")
 
 # Variables del juego
 tile_size = 50
-game_over = 0;
+game_over = 0
+main_menu = True
 
 # cargar imagenes
 sun_img = pygame.image.load('img/sun.png')
 bg_img = pygame.image.load('img/sky.png')
 restart_img = pygame.image.load('img/restart_btn.png')
-
+start_img = pygame.image.load('img/start_btn.png')
+exit_img = pygame.image.load('img/exit_btn.png')
 
 class Button():
     def __init__(self,x,y,image):
@@ -277,9 +279,11 @@ world = World(world_data)
 
 #botones
 restart_button = Button(screen_width//2-50, screen_height // 2 + 100, restart_img)
+start_button = Button(screen_width // 2 - 350, screen_height // 2, start_img)
+exit_button = Button(screen_width // 2 + 250, screen_height // 2, exit_img)
 
 # necesitamos un loop para que la ventana se muestre mucho tiempo
-# si no se cerraria
+# sino se cerraria
 run = True
 while run:
 
@@ -289,20 +293,26 @@ while run:
     screen.blit(bg_img, (0, 0))
     screen.blit(sun_img, (100, 100))
 
-    world.draw()
+    if main_menu == True:
+        if exit_button.draw():
+            run = False
+        if start_button.draw():
+            main_menu = False
+    else:
+        world.draw()
 
-    if game_over == 0:
-        blob_group.update()
+        if game_over == 0:
+            blob_group.update()
+            
+        blob_group.draw(screen)
+        lava_group.draw(screen)
+
+        game_over = jugador.update(game_over)
         
-    blob_group.draw(screen)
-    lava_group.draw(screen)
-
-    game_over = jugador.update(game_over)
-    
-    if game_over == -1:
-        if restart_button.draw():
-            jugador.reset(100, screen_height - 130)
-            game_over = 0;
+        if game_over == -1:
+            if restart_button.draw():
+                jugador.reset(100, screen_height - 130)
+                game_over = 0
             
 
     for event in pygame.event.get():
