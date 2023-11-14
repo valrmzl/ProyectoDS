@@ -20,33 +20,39 @@ game_over = 0;
 # cargar imagenes
 sun_img = pygame.image.load('img/sun.png')
 bg_img = pygame.image.load('img/sky.png')
+restart_img = pygame.image.load('img/restart_btn.png')
 
+
+class Button():
+    def __init__(self,x,y,image):
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.clicked = False
+        
+    def draw(self):
+        action = False
+        #posicion mouse
+        pos = pygame.mouse.get_pos()
+        
+        #checar mouse
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                action = True
+                self.clicked = True
+        
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+                
+        screen.blit(self.image, self.rect)
+        
+        return action
 
 # Clase para mostrar mi jugador
 class Jugador():
     def __init__(self, x, y):
-        self.images_right = []
-        self.images_left = []
-        self.index = 0
-        self.counter = 0
-
-        for num in range(1, 5): #Cargaremos las 4 imagenes para la animación. Izquierda y derecha
-            img_right = pygame.image.load(f'img/guy{num}.png')
-            img_right = pygame.transform.scale(img_right, (40, 80))
-            img_left = pygame.transform.flip(img_right, True, False)
-            self.images_right.append(img_right)
-            self.images_left.append(img_left)
-        self.dead_image = pygame.image.load('img/ghost.png')
-        self.image = self.images_right[self.index]
-
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
-        self.vel_y = 0
-        self.jumped = False
-        self.direction = 0
+       self.reset(x,y)
 
     def update(self, game_over):
         dx = 0  # Variables creadas para detectar colisiones
@@ -57,7 +63,7 @@ class Jugador():
         
             # Obtener clics
             key = pygame.key.get_pressed()
-            if key[pygame.K_SPACE] and self.jumped == False:
+            if key[pygame.K_SPACE] and self.jumped == False and self.in_air == False:
                 self.vel_y = -15
                 self.jumped = True
             if key[pygame.K_SPACE] == False:
@@ -97,6 +103,7 @@ class Jugador():
             dy += self.vel_y
 
             # Detectar colisiones
+            self.in_air = True
             for tile in world.tile_list:
                 #checar en x y y de manera separada
                 #en x
@@ -112,6 +119,7 @@ class Jugador():
                     elif self.vel_y >= 0:
                         dy = tile[1].top -self.rect.bottom
                         self.vel_y = 0
+                        self.in_air = False
 
             #colision con los enemigos
             if pygame.sprite.spritecollide(self, blob_group,False):
@@ -136,7 +144,31 @@ class Jugador():
             
         return game_over
 
+    def reset(self,x,y):
+        self.images_right = []
+        self.images_left = []
+        self.index = 0
+        self.counter = 0
 
+        for num in range(1, 5): #Cargaremos las 4 imagenes para la animación. Izquierda y derecha
+            img_right = pygame.image.load(f'img/guy{num}.png')
+            img_right = pygame.transform.scale(img_right, (40, 80))
+            img_left = pygame.transform.flip(img_right, True, False)
+            self.images_right.append(img_right)
+            self.images_left.append(img_left)
+        self.dead_image = pygame.image.load('img/ghost.png')
+        self.image = self.images_right[self.index]
+
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.vel_y = 0
+        self.jumped = False
+        self.direction = 0
+        self.in_air = True
+        
 class World():
     # constructor
     def __init__(self, data):
@@ -242,6 +274,10 @@ blob_group = pygame.sprite.Group() #crea un nuevo grupo vacio para despues poder
 lava_group = pygame.sprite.Group()
 world = World(world_data)
 
+
+#botones
+restart_button = Button(screen_width//2-50, screen_height // 2 + 100, restart_img)
+
 # necesitamos un loop para que la ventana se muestre mucho tiempo
 # si no se cerraria
 run = True
@@ -257,10 +293,17 @@ while run:
 
     if game_over == 0:
         blob_group.update()
-        blob_group.draw(screen)
-        lava_group.draw(screen)
+        
+    blob_group.draw(screen)
+    lava_group.draw(screen)
 
     game_over = jugador.update(game_over)
+    
+    if game_over == -1:
+        if restart_button.draw():
+            jugador.reset(100, screen_height - 130)
+            game_over = 0;
+            
 
     for event in pygame.event.get():
         # EL BOTON DE X
