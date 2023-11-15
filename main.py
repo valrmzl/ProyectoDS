@@ -15,13 +15,20 @@ screen_height = 1000
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("El super juego de Vale, Chris y Sebas")
 
+#fuente  y color del score
+font_score = pygame.font.SysFont('Bauhus 93', 30)
+#para el game over
+font = pygame.font.SysFont('Bauhus 93', 70)
+white = (255,255, 255)
+blue = (0,0, 255)
 # Variables del juego
 tile_size = 50
 game_over = 0
 main_menu = True
 
 nivel = 1
-nivel_maximo = 5
+nivel_maximo = 2
+score = 0 #el de las monedas
 
 # cargar imagenes
 sun_img = pygame.image.load('img/sun.png')
@@ -29,6 +36,15 @@ bg_img = pygame.image.load('img/sky.png')
 restart_img = pygame.image.load('img/restart_btn.png')
 start_img = pygame.image.load('img/start_btn.png')
 exit_img = pygame.image.load('img/exit_btn.png')
+
+
+
+#mostrar el score
+
+def draw_text(text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    screen.blit(img, (x,y))
+
 
 #funcion para reinciar el nivel
 def reiniciar_nivel(level):
@@ -157,6 +173,8 @@ class Jugador():
             #colision de cambio de nivel y de salida
             if pygame.sprite.spritecollide(self, exit_group,False):
                 game_over = 1
+
+            
                 
 
 
@@ -165,6 +183,7 @@ class Jugador():
             self.rect.y += dy
         elif game_over == -1:
             self.image = self.dead_image
+            draw_text('GAME OVER !!!', font, blue, (screen_width//2)-140, (screen_height//2))
             if self.rect.y > 200:
                 self.rect.y -= 5
 
@@ -236,9 +255,13 @@ class World():
                 if tile == 6:
                     lava =  Lava(col_count * tile_size, row_count * tile_size + int(tile_size // 2))
                     lava_group.add(lava)
+                if tile == 7:
+                    moneda = Moneda(col_count * tile_size + (tile_size // 2), row_count * tile_size - (tile_size//2))
+                    moneda_group.add(moneda)
                 if tile == 8:
                     exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size//2))
                     exit_group.add(exit)
+                
                     
                     
                 col_count += 1
@@ -280,6 +303,16 @@ class Lava(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y 
 
+class Moneda(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        img =  pygame.image.load('img/coin.png')
+        self.image = pygame.transform.scale(img, (tile_size // 2, tile_size // 2))
+        self.rect = self.image.get_rect()
+        self.rect.center = (x,y) #para que quede centrada en el bloque
+ 
+
+
 class Exit(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -294,8 +327,11 @@ jugador = Jugador(100, screen_height - 130)
 blob_group = pygame.sprite.Group() #crea un nuevo grupo vacio para despues poder añadirle enemigos
 lava_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
+moneda_group = pygame.sprite.Group()
 
-
+# una moneda para donde se muestra el score
+moneda_score = Moneda(tile_size // 2, tile_size//2 )
+moneda_group.add(moneda_score)
 #cargar el nivel desde data y crear el mudno
 
 with open(f'nivel{nivel}_data', 'r') as file:
@@ -332,10 +368,16 @@ while run:
 
         if game_over == 0:
             blob_group.update()
+            #actualizar el score de las monedas
+            #pero primero vemos si hubo una colision
+            if pygame.sprite.spritecollide(jugador, moneda_group,True): #el arguento de true aqui hace que desaparezca
+                score += 1
+            draw_text('X ' + str(score), font_score, white, tile_size - 10, 10)
             
         blob_group.draw(screen)
         lava_group.draw(screen)
         exit_group.draw(screen)
+        moneda_group.draw(screen)
 
         game_over = jugador.update(game_over)
         
@@ -345,6 +387,7 @@ while run:
                 world_data = []
                 world = reiniciar_nivel(nivel)
                 game_over = 0
+                score = 0
         #si el juagdor avanza de nivel
         if game_over == 1:
             #resetear y siguiente nivel
@@ -357,12 +400,14 @@ while run:
                 game_over = 0 
                 
             else:
+                draw_text('YOU WIN!! :D  ', font, blue, (screen_width//2)-140, (screen_height//2))
                 #restart 
                 if restart_button.draw():
                     level = 1
                     world_data = []
                     world = reiniciar_nivel(nivel)
                     game_over = 0 
+                    score = 0
                     
                     
                 
