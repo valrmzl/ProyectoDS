@@ -1,6 +1,8 @@
+import ast
 import pygame
+from os import path
 from pygame.locals import *
-
+import pickle #libreria que ayuda a importar la data de cada nivel en python
 pygame.init()
 
 clock = pygame.time.Clock()
@@ -18,12 +20,34 @@ tile_size = 50
 game_over = 0
 main_menu = True
 
+nivel = 1
+nivel_maximo = 5
+
 # cargar imagenes
 sun_img = pygame.image.load('img/sun.png')
 bg_img = pygame.image.load('img/sky.png')
 restart_img = pygame.image.load('img/restart_btn.png')
 start_img = pygame.image.load('img/start_btn.png')
 exit_img = pygame.image.load('img/exit_btn.png')
+
+#funcion para reinciar el nivel
+def reiniciar_nivel(level):
+    jugador.reset(100, screen_height-130)
+    #todos mis grupos tambien deben de estar vacios
+    blob_group.empty()
+    lava_group.empty()
+    exit_group.empty()
+    #cargar el nivel desde data y crear el mudno
+
+    if path.exists(f'nivel{nivel}_data'):
+        with open(f'nivel{nivel}_data', 'r') as file:
+            world_data_str = file.read()
+            world_data = ast.literal_eval(world_data_str)
+
+    # Ahora puedes crear el objeto World con los datos cargados
+    world = World(world_data)
+
+    return world
 
 class Button():
     def __init__(self,x,y,image):
@@ -130,6 +154,11 @@ class Jugador():
             if pygame.sprite.spritecollide(self, lava_group,False):
                 game_over = -1
                 print(game_over)
+            #colision de cambio de nivel y de salida
+            if pygame.sprite.spritecollide(self, exit_group,False):
+                game_over = 1
+                
+
 
             # Actualizar las coordenadas del jugador
             self.rect.x += dx
@@ -207,6 +236,9 @@ class World():
                 if tile == 6:
                     lava =  Lava(col_count * tile_size, row_count * tile_size + int(tile_size // 2))
                     lava_group.add(lava)
+                if tile == 8:
+                    exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size//2))
+                    exit_group.add(exit)
                     
                     
                 col_count += 1
@@ -219,29 +251,7 @@ class World():
             pygame.draw.rect(screen, (255,255,255), tile[1], 2)
 
 
-# esto es lo que me va a permitir ubicar las cosas que quiero mostrar
-world_data = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 1],
-    [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 2, 2, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 7, 0, 5, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 1],
-    [1, 7, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 7, 0, 0, 0, 0, 1],
-    [1, 0, 2, 0, 0, 7, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 2, 0, 0, 4, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 7, 0, 0, 0, 0, 2, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 1],
-    [1, 0, 0, 0, 0, 0, 2, 2, 2, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
+
 
 class Enemigo(pygame.sprite.Sprite): #por default ya tiene un  metodo de update esto que estamos importando
     def __init__(self, x, y):
@@ -270,10 +280,29 @@ class Lava(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y 
 
+class Exit(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        img =  pygame.image.load('img/exit.png')
+        self.image = pygame.transform.scale(img, (tile_size, tile_size * 1.5))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y 
+
 # Creación de instancias
 jugador = Jugador(100, screen_height - 130)
 blob_group = pygame.sprite.Group() #crea un nuevo grupo vacio para despues poder añadirle enemigos
 lava_group = pygame.sprite.Group()
+exit_group = pygame.sprite.Group()
+
+
+#cargar el nivel desde data y crear el mudno
+
+with open(f'nivel{nivel}_data', 'r') as file:
+    world_data_str = file.read()
+    world_data = ast.literal_eval(world_data_str)
+
+# Ahora puedes crear el objeto World con los datos cargados
 world = World(world_data)
 
 
@@ -306,13 +335,39 @@ while run:
             
         blob_group.draw(screen)
         lava_group.draw(screen)
+        exit_group.draw(screen)
 
         game_over = jugador.update(game_over)
         
+        #si el jugador murio
         if game_over == -1:
             if restart_button.draw():
-                jugador.reset(100, screen_height - 130)
+                world_data = []
+                world = reiniciar_nivel(nivel)
                 game_over = 0
+        #si el juagdor avanza de nivel
+        if game_over == 1:
+            #resetear y siguiente nivel
+            nivel +=1
+            #y checar que aun no sea el ultimo nivel
+            #estar seguro del nivel
+            if nivel <= nivel_maximo:
+                world_data = []
+                world = reiniciar_nivel(nivel)
+                game_over = 0 
+                
+            else:
+                #restart 
+                if restart_button.draw():
+                    level = 1
+                    world_data = []
+                    world = reiniciar_nivel(nivel)
+                    game_over = 0 
+                    
+                    
+                
+            
+
             
 
     for event in pygame.event.get():
