@@ -2,7 +2,12 @@ import ast
 import pygame
 from os import path
 from pygame.locals import *
+from pygame import mixer
 import pickle #libreria que ayuda a importar la data de cada nivel en python
+
+
+pygame.mixer.pre_init(44100, -16, 2, 512) #configuracion default recomendada
+mixer.init()
 pygame.init()
 
 clock = pygame.time.Clock()
@@ -37,6 +42,18 @@ restart_img = pygame.image.load('img/restart_btn.png')
 start_img = pygame.image.load('img/start_btn.png')
 exit_img = pygame.image.load('img/exit_btn.png')
 
+
+#cargar musica
+
+moneda_fx = pygame.mixer.Sound('img/coin.wav')
+moneda_fx.set_volume(0.5)
+
+
+jump_fx = pygame.mixer.Sound('img/jump.wav')
+jump_fx.set_volume(0.5)
+
+game_fx = pygame.mixer.Sound('img/music.wav')
+game_fx.set_volume(0.5)
 
 
 #mostrar el score
@@ -106,6 +123,7 @@ class Jugador():
             # Obtener clics
             key = pygame.key.get_pressed()
             if key[pygame.K_SPACE] and self.jumped == False and self.in_air == False:
+                jump_fx.play()
                 self.vel_y = -15
                 self.jumped = True
             if key[pygame.K_SPACE] == False:
@@ -166,10 +184,12 @@ class Jugador():
             #colision con los enemigos
             if pygame.sprite.spritecollide(self, blob_group,False):
                 game_over = -1
+                game_over_fx.play()
             #colision con lava
             if pygame.sprite.spritecollide(self, lava_group,False):
                 game_over = -1
-                print(game_over)
+                game_over_fx.play()
+                #print(game_over)
             #colision de cambio de nivel y de salida
             if pygame.sprite.spritecollide(self, exit_group,False):
                 game_over = 1
@@ -372,6 +392,7 @@ while run:
             #pero primero vemos si hubo una colision
             if pygame.sprite.spritecollide(jugador, moneda_group,True): #el arguento de true aqui hace que desaparezca
                 score += 1
+                moneda_fx.play()
             draw_text('X ' + str(score), font_score, white, tile_size - 10, 10)
             
         blob_group.draw(screen)
@@ -403,7 +424,7 @@ while run:
                 draw_text('YOU WIN!! :D  ', font, blue, (screen_width//2)-140, (screen_height//2))
                 #restart 
                 if restart_button.draw():
-                    level = 1
+                    nivel = 1
                     world_data = []
                     world = reiniciar_nivel(nivel)
                     game_over = 0 
