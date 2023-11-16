@@ -31,7 +31,7 @@ tile_size = 50
 game_over = 0
 main_menu = True
 
-nivel = 1
+nivel = 2
 nivel_maximo = 2
 score = 0 #el de las monedas
 
@@ -184,11 +184,11 @@ class Jugador():
             #colision con los enemigos
             if pygame.sprite.spritecollide(self, blob_group,False):
                 game_over = -1
-                game_over_fx.play()
+                #game_over_fx.play()
             #colision con lava
             if pygame.sprite.spritecollide(self, lava_group,False):
                 game_over = -1
-                game_over_fx.play()
+                #game_over_fx.play()
                 #print(game_over)
             #colision de cambio de nivel y de salida
             if pygame.sprite.spritecollide(self, exit_group,False):
@@ -272,6 +272,12 @@ class World():
                 if tile == 3:
                     blob = Enemigo(col_count * tile_size, row_count * tile_size + 15)
                     blob_group.add(blob)
+                if tile == 4:   #Plataformas horizontales
+                    plataforma = Plataforma(col_count * tile_size, row_count * tile_size, 1, 0)
+                    platform_group.add(plataforma)
+                if tile == 5:   #Plataformas verticales
+                    plataforma = Plataforma(col_count * tile_size, row_count * tile_size, 0, 1)
+                    platform_group.add(plataforma)
                 if tile == 6:
                     lava =  Lava(col_count * tile_size, row_count * tile_size + int(tile_size // 2))
                     lava_group.add(lava)
@@ -307,12 +313,35 @@ class Enemigo(pygame.sprite.Sprite): #por default ya tiene un  metodo de update 
         self.move_counter = 0
     
     def update(self):
-        ##moviendolos derecha e ixquierda
+        ##moviendolos derecha e izquierda
         self.rect.x += self.move_direction
         self.move_counter += 1
         if abs(self.move_counter) > 50:
             self.move_direction *= -1
             self.move_counter *= -1
+
+class Plataforma(pygame.sprite.Sprite):
+    def __init__(self, x, y, move_x, move_y):
+        pygame.sprite.Sprite.__init__(self)
+        img =  pygame.image.load('img/platform.png')
+        self.image = pygame.transform.scale(img, (tile_size, tile_size // 2))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.move_counter = 0
+        self.move_direction = 1
+        self.move_x = move_x
+        self.move_y = move_y
+
+    def update(self):
+        ##moviendolos derecha e izquierda
+        self.rect.x += self.move_direction * self.move_x
+        self.rect.y += self.move_direction * self.move_y
+        self.move_counter += 1
+        if abs(self.move_counter) > 50:
+            self.move_direction *= -1
+            self.move_counter *= -1
+
 
 class Lava(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -344,7 +373,9 @@ class Exit(pygame.sprite.Sprite):
 
 # Creación de instancias
 jugador = Jugador(100, screen_height - 130)
+
 blob_group = pygame.sprite.Group() #crea un nuevo grupo vacio para despues poder añadirle enemigos
+platform_group = pygame.sprite.Group()
 lava_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 moneda_group = pygame.sprite.Group()
@@ -388,6 +419,7 @@ while run:
 
         if game_over == 0:
             blob_group.update()
+            platform_group.update()
             #actualizar el score de las monedas
             #pero primero vemos si hubo una colision
             if pygame.sprite.spritecollide(jugador, moneda_group,True): #el arguento de true aqui hace que desaparezca
@@ -396,6 +428,7 @@ while run:
             draw_text('X ' + str(score), font_score, white, tile_size - 10, 10)
             
         blob_group.draw(screen)
+        platform_group.draw(screen)
         lava_group.draw(screen)
         exit_group.draw(screen)
         moneda_group.draw(screen)
