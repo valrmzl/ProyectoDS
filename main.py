@@ -31,8 +31,8 @@ tile_size = 50
 game_over = 0
 main_menu = True
 
-nivel = 2
-nivel_maximo = 2
+nivel = 1
+nivel_maximo = 1
 score = 0 #el de las monedas
 
 # cargar imagenes
@@ -64,10 +64,11 @@ def draw_text(text, font, text_col, x, y):
 
 
 #funcion para reinciar el nivel
-def reiniciar_nivel(level):
+def reiniciar_nivel(nivel):
     jugador.reset(100, screen_height-130)
     #todos mis grupos tambien deben de estar vacios
     blob_group.empty()
+    platform_group.empty()
     lava_group.empty()
     exit_group.empty()
     #cargar el nivel desde data y crear el mudno
@@ -117,9 +118,9 @@ class Jugador():
         dx = 0  # Variables creadas para detectar colisiones
         dy = 0
         walk_cooldown = 5
+        col_thresh = 20
 
         if game_over == 0:
-        
             # Obtener clics
             key = pygame.key.get_pressed()
             if key[pygame.K_SPACE] and self.jumped == False and self.in_air == False:
@@ -177,7 +178,7 @@ class Jugador():
                         self.vel_y = 0
                     #checar si abajo del ground ie falling
                     elif self.vel_y >= 0:
-                        dy = tile[1].top -self.rect.bottom
+                        dy = tile[1].top - self.rect.bottom
                         self.vel_y = 0
                         self.in_air = False
 
@@ -194,10 +195,28 @@ class Jugador():
             if pygame.sprite.spritecollide(self, exit_group,False):
                 game_over = 1
 
-            
+            #Colisión con plataformas
+            for platform in platform_group:
+                #Colisión en dirección x
+                if platform.rect.colliderect(self.rect.x + dx, self.rect.y , self.width, self.height):
+                    dx = 0
+                #Colisión en dirección y
+                if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                    #Revisar plataformas por debajo
+                    if abs((self.rect.top + dy) - platform.rect.bottom) < col_thresh:
+                        self.vel_y = 0
+                        dy = platform.rect.bottom - self.rect.top
+                    #Revisar plataformas por encima
+                    elif abs((self.rect.bottom + dy) - platform.rect.top) < col_thresh:
+                        self.rect.bottom = platform.rect.top - 1
+                        self.in_air = False
+                        dy = 0
+                    #Moverse con la plataforma
+                    if platform.move_x != 0:
+                        self.rect.x += platform.move_direction
+                    if platform.move_y != 0:
+                        self.rect.y += platform.move_direction * platform.move_y
                 
-
-
             # Actualizar las coordenadas del jugador
             self.rect.x += dx
             self.rect.y += dy
@@ -210,7 +229,7 @@ class Jugador():
         # Dibujar jugador EN LA PLANTALLA
         screen.blit(self.image, self.rect)
         # dibujamos el recatngulo de para el elemento del jugador
-        pygame.draw.rect(screen, (255,255,255), self.rect, 2)
+        # pygame.draw.rect(screen, (255,255,255), self.rect, 2)
             
         return game_over
 
@@ -297,7 +316,7 @@ class World():
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
             #dibujamos el rectangulo para cada elemento
-            pygame.draw.rect(screen, (255,255,255), tile[1], 2)
+            # pygame.draw.rect(screen, (255,255,255), tile[1], 2)
 
 
 
