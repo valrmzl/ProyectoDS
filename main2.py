@@ -63,6 +63,21 @@ def draw_text(text, font, text_col, x, y):
     screen.blit(img, (x,y))
 
 
+'''PATRON DE COMPORTAMIENTO'''
+class Observable:
+    def __init__(self):
+        self.observers = []
+
+    def add_observer(self, observer):
+        self.observers.append(observer)
+
+    def remove_observer(self, observer):
+        self.observers.remove(observer)
+
+    def notify_observers(self, event):
+        for observer in self.observers:
+            observer.update(event)
+
 #funcion para reinciar el nivel
 def reiniciar_nivel(nivel):
     jugador.reset(100, screen_height-130)
@@ -110,8 +125,9 @@ class Button():
         return action
 
 # Clase para mostrar mi jugador
-class Jugador():
+class Jugador(Observable):
     def __init__(self, x, y):
+       Observable.__init__(self)  # Agregar esta línea para inicializar la clase base
        self.reset(x,y)
 
     def update(self, game_over):
@@ -232,6 +248,13 @@ class Jugador():
         # pygame.draw.rect(screen, (255,255,255), self.rect, 2)
             
         return game_over
+
+    
+    def recolectar_moneda(self):
+        print("sonidooo")
+        moneda_fx.play()
+        self.notify_observers("Moneda recolectada")
+        
 
     def reset(self,x,y):
         self.images_right = []
@@ -371,14 +394,18 @@ class Lava(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y 
 
-class Moneda(pygame.sprite.Sprite):
+class Moneda(pygame.sprite.Sprite, Observable):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
+        Observable.__init__(self) #COMPORTAMIENTO
         img =  pygame.image.load('img/coin.png')
         self.image = pygame.transform.scale(img, (tile_size // 2, tile_size // 2))
         self.rect = self.image.get_rect()
         self.rect.center = (x,y) #para que quede centrada en el bloque
- 
+    
+    def recolectar(self):
+        self.notify_observers("Moneda recolectada")
+        self.kill()
 
 
 class Exit(pygame.sprite.Sprite):
@@ -402,6 +429,7 @@ moneda_group = pygame.sprite.Group()
 # una moneda para donde se muestra el score
 moneda_score = Moneda(tile_size // 2, tile_size//2 )
 moneda_group.add(moneda_score)
+moneda_score.add_observer(jugador)
 #cargar el nivel desde data y crear el mudno
 
 with open(f'nivel{nivel}_data', 'r') as file:
@@ -443,7 +471,8 @@ while run:
             #pero primero vemos si hubo una colision
             if pygame.sprite.spritecollide(jugador, moneda_group,True): #el arguento de true aqui hace que desaparezca
                 score += 1
-                moneda_fx.play()
+                #moneda_fx.play()
+                jugador.recolectar_moneda()
             draw_text('X ' + str(score), font_score, white, tile_size - 10, 10)
             
         blob_group.draw(screen)
