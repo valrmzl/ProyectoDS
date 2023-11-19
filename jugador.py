@@ -3,9 +3,6 @@ import ast
 import pygame
 from os import path
 from pygame.locals import *
-from pygame import mixer
-import pickle
-import sys
 from config import *
 
 def verificar_salto(func):
@@ -171,6 +168,7 @@ class Jugador(Observable):
         self.images_left = []
         self.index = 0
         self.counter = 0
+        jump_height = -15
 
         for num in range(1, 5):
             img_right = pygame.image.load(f'img/{nombre}/guy{num}.png')

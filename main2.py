@@ -2,12 +2,7 @@ import ast
 import pygame
 from os import path
 from pygame.locals import *
-from pygame import mixer
-import pickle
-import sys
-from observable import Observable
 from jugador import Jugador
-from entidades import Moneda, Enemigo, Lava, Plataforma, Exit
 from world import World
 from config import *
 from game import *
@@ -24,6 +19,8 @@ def reiniciar_nivel(nivel):
     World: Una nueva instancia del mundo con el nivel reiniciado.
     """
     global player_name
+    global jump_height
+    jump_height = -15
     jugador.reset(100, screen_height-130, player_name)
     blob_group.empty()
     platform_group.empty()
