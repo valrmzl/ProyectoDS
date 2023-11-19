@@ -38,7 +38,7 @@ game_over = 0
 main_menu = True
 player_name = ""
 nivel = 1
-nivel_maximo = 2
+nivel_maximo = 4
 score = 0  # Puntuación de las monedas
 
 # Cargar imágenes

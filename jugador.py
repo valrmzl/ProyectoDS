@@ -23,7 +23,7 @@ def verificar_salto(func):
         if self.contador_monedas == 10:
             print("10 MONEDAS")
             global jump_height
-            jump_height -= 5 
+            jump_height -= 2
             self.contador_monedas = 0  
     return wrapper
 
@@ -158,6 +158,13 @@ class Jugador(Observable):
         self.notify_observers("Moneda recolectada")
         self.contador_monedas += 1
 
+    def reset_salto(self):
+        """
+        Restablece la altura del salto a su valor predeterminado.
+        """
+        global jump_height
+        jump_height = -15
+
     def reset(self, x, y, nombre):
         """
         Restablece las propiedades del jugador a su estado inicial.
@@ -190,3 +197,4 @@ class Jugador(Observable):
         self.jumped = False
         self.direction = 0
         self.in_air = True
+        self.reset_salto()
