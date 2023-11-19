@@ -129,12 +129,12 @@ class Button():
 def verificar_salto(func):
     print("Si entra")
     def wrapper(self):
-        func(self)  # Llamar al método recolectar_moneda original
+        func(self)  
         if self.contador_monedas == 10:
             print("10 MONEDAS")
             global jump_height
-            jump_height -= 5  # Modificar la altura del salto
-            self.contador_monedas = 0  # Reiniciar el contador de monedas
+            jump_height -= 5 
+            self.contador_monedas = 0  
     return wrapper
 
 # Clase para mostrar mi jugador
