@@ -1,20 +1,33 @@
-
-from  observable import Observable
+from observable import Observable
 import ast
 import pygame
 from os import path
 from pygame.locals import *
 from pygame import mixer
-import pickle #libreria que ayuda a importar la data de cada nivel en python
+import pickle
 import sys
-from entidades import Moneda,Enemigo,Plataforma,Lava,Exit
+from entidades import Moneda, Enemigo, Plataforma, Lava, Exit
 
 class World():
-    def __init__(self, data,GameObjectFactory):
-        self.tile_list = []
-        self.create_objects(data,GameObjectFactory)
+    def __init__(self, data, GameObjectFactory):
+        """
+        Inicializa el mundo del juego.
 
-    def create_objects(self, data,GameObjectFactory):
+        Parámetros:
+        data (list): Una lista que representa el diseño del nivel.
+        GameObjectFactory (class): Una clase que se utiliza para crear diferentes objetos en el mundo.
+        """
+        self.tile_list = []
+        self.create_objects(data, GameObjectFactory)
+
+    def create_objects(self, data, GameObjectFactory):
+        """
+        Crea objetos en el mundo según la información del diseño del nivel.
+
+        Parámetros:
+        data (list): Una lista que representa el diseño del nivel.
+        GameObjectFactory (class): Una clase que se utiliza para crear diferentes objetos en el mundo.
+        """
         tile_size = 50
         row_count = 0
         for row in data:
@@ -31,13 +44,22 @@ class World():
                 elif tile == 6:
                     GameObjectFactory.create_object("lava", col_count * tile_size, row_count * tile_size + int(tile_size // 2))
                 elif tile == 7:
-                    GameObjectFactory.create_object("moneda", col_count * tile_size + (tile_size // 2), row_count * tile_size - (tile_size//2))
+                    GameObjectFactory.create_object("moneda", col_count * tile_size + (tile_size // 2), row_count * tile_size - (tile_size // 2))
                 elif tile == 8:
-                    GameObjectFactory.create_object("exit", col_count * tile_size, row_count * tile_size - (tile_size//2))
+                    GameObjectFactory.create_object("exit", col_count * tile_size, row_count * tile_size - (tile_size // 2))
 
                 col_count += 1
             row_count += 1
+
     def create_tile(self, tile_type, x, y):
+        """
+        Crea un objeto de tipo 'tile' en el mundo.
+
+        Parámetros:
+        tile_type (int): El tipo de 'tile' a crear.
+        x (int): La posición horizontal del 'tile'.
+        y (int): La posición vertical del 'tile'.
+        """
         tile_size = 50
         dirt_img = pygame.image.load('img/dirt.png')
         grass_img = pygame.image.load('img/grass.png')
@@ -49,7 +71,12 @@ class World():
         tile_instance = (img, img_rect)
         self.tile_list.append(tile_instance)
 
+    def draw(self, screen):
+        """
+        Dibuja los 'tiles' en la pantalla.
 
-    def draw(self,screen):
+        Parámetros:
+        screen: La pantalla de juego en la que se deben dibujar los 'tiles'.
+        """
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
