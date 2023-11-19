@@ -4,6 +4,7 @@ from os import path
 from pygame.locals import *
 from pygame import mixer
 import pickle #libreria que ayuda a importar la data de cada nivel en python
+import sys
 
 
 pygame.mixer.pre_init(44100, -16, 2, 512) #configuracion default recomendada
@@ -31,6 +32,7 @@ tile_size = 50
 game_over = 0
 main_menu = True
 jump_height = -15
+player_name = ""
 
 nivel = 1
 nivel_maximo = 2
@@ -81,7 +83,8 @@ class Observable:
 
 #funcion para reinciar el nivel
 def reiniciar_nivel(nivel):
-    jugador.reset(100, screen_height-130)
+    global player_name
+    jugador.reset(100, screen_height-130,player_name)
     #todos mis grupos tambien deben de estar vacios
     blob_group.empty()
     platform_group.empty()
@@ -140,9 +143,9 @@ def verificar_salto(func):
 # Clase para mostrar mi jugador
 class Jugador(Observable):
     jump_height = -15
-    def __init__(self, x, y):
+    def __init__(self, x, y, nombre):
        Observable.__init__(self)  # Agregar esta línea para inicializar la clase base
-       self.reset(x,y)
+       self.reset(x,y,nombre)
        self.contador_monedas = 0
 
     def update(self, game_over):
@@ -274,14 +277,14 @@ class Jugador(Observable):
         self.contador_monedas += 1
         
 
-    def reset(self,x,y):
+    def reset(self,x,y,nombre):
         self.images_right = []
         self.images_left = []
         self.index = 0
         self.counter = 0
 
         for num in range(1, 5): #Cargaremos las 4 imagenes para la animación. Izquierda y derecha
-            img_right = pygame.image.load(f'img/vale{num}.png')
+            img_right = pygame.image.load(f'img/{nombre}/guy{num}.png')
             img_right = pygame.transform.scale(img_right, (40, 80))
             img_left = pygame.transform.flip(img_right, True, False)
             self.images_right.append(img_right)
@@ -444,12 +447,46 @@ class GameObjectFactory:
             raise ValueError(f"Tipo de objeto no válido: {object_type}")
         return objeto
 
+class PlayerSelection:
+    def __init__(self):
+        self.seleccionado = None
+
+    def mostrar_seleccion(self):
+        sebas_img = pygame.image.load('img/Sebas/guy1.png')
+        vale_img = pygame.image.load('img/Vale/guy1.png')
+        chris_img = pygame.image.load('img/Chris/guy1.png')
+
+        sebas_btn = Button(screen_width // 4 - 50, screen_height // 2, sebas_img)
+        vale_btn = Button(screen_width // 2 - 50, screen_height // 2, vale_img)
+        chris_btn = Button(3 * screen_width // 4 - 50, screen_height // 2, chris_img)
+
+        seleccion_realizada = False
+
+        while not seleccion_realizada:
+            clock.tick(fps)
+            screen.blit(bg_img, (0, 0))
+            draw_text('Selecciona a tu jugador', font, white, screen_width // 2 - 200, screen_height // 4)
+
+            if sebas_btn.draw():
+                self.seleccionado = "Sebas"
+                print("Sebas selected")
+                seleccion_realizada = True
+            if vale_btn.draw():
+                self.seleccionado = "Vale"
+                seleccion_realizada = True
+            if chris_btn.draw():
+                self.seleccionado = "Chris"
+                seleccion_realizada = True
+
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
 
 
-
-# Creación de instancias
-jugador = Jugador(100, screen_height - 130)
 
 blob_group = pygame.sprite.Group() #crea un nuevo grupo vacio para despues poder añadirle enemigos
 platform_group = pygame.sprite.Group()
@@ -460,7 +497,7 @@ moneda_group = pygame.sprite.Group()
 # una moneda para donde se muestra el score
 moneda_score = Moneda(tile_size // 2, tile_size//2 )
 moneda_group.add(moneda_score)
-moneda_score.add_observer(jugador)
+
 
 
 #cargar el nivel desde data y crear el mudno
@@ -497,6 +534,12 @@ while run:
         if exit_button.draw():
             run = False
         if start_button.draw():
+           
+            player_selection = PlayerSelection()
+            player_selection.mostrar_seleccion()
+            player_name = player_selection.seleccionado
+            jugador = Jugador(100, screen_height - 130, player_name)
+            moneda_score.add_observer(jugador)
             main_menu = False
     else:
         world.draw()
@@ -504,6 +547,8 @@ while run:
         if game_over == 0:
             blob_group.update()
             platform_group.update()
+           
+            
             #actualizar el score de las monedas
             #pero primero vemos si hubo una colision
             if pygame.sprite.spritecollide(jugador, moneda_group,True): #el arguento de true aqui hace que desaparezca
