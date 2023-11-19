@@ -282,58 +282,43 @@ class Jugador(Observable):
         self.in_air = True
         
 class World():
-    # constructor
     def __init__(self, data):
-
         self.tile_list = []
-        # cargar imagenes
-        dirt_img = pygame.image.load('img/dirt.png')
-        grass_img = pygame.image.load('img/grass.png')
+        self.create_objects(data)
 
+    def create_objects(self, data):
         row_count = 0
         for row in data:
             col_count = 0
             for tile in row:
-                if tile == 1:
-                    img = pygame.transform.scale(dirt_img, (tile_size, tile_size))
-                    # pero necesito saber donde la voy a poner
-                    img_rect = img.get_rect()
+                if tile in [1, 2]:
+                    self.create_tile(tile, col_count, row_count)
+                elif tile == 3:
+                    GameObjectFactory.create_object("enemigo", col_count * tile_size, row_count * tile_size + 15)
+                elif tile == 4:
+                    GameObjectFactory.create_object("plataforma", col_count * tile_size, row_count * tile_size, 1, 0)
+                elif tile == 5:
+                    GameObjectFactory.create_object("plataforma", col_count * tile_size, row_count * tile_size, 0, 1)
+                elif tile == 6:
+                    GameObjectFactory.create_object("lava", col_count * tile_size, row_count * tile_size + int(tile_size // 2))
+                elif tile == 7:
+                    GameObjectFactory.create_object("moneda", col_count * tile_size + (tile_size // 2), row_count * tile_size - (tile_size//2))
+                elif tile == 8:
+                    GameObjectFactory.create_object("exit", col_count * tile_size, row_count * tile_size - (tile_size//2))
 
-                    img_rect.x = col_count * tile_size
-                    img_rect.y = row_count * tile_size
-                    tile = (img, img_rect)
-                    self.tile_list.append(tile)
-                if tile == 2:
-                    img = pygame.transform.scale(grass_img, (tile_size, tile_size))
-                    # pero necesito saber donde la voy a poner
-                    img_rect = img.get_rect()
-                    img_rect.x = col_count * tile_size
-                    img_rect.y = row_count * tile_size
-                    tile = (img, img_rect)
-                    self.tile_list.append(tile)
-                if tile == 3:
-                    blob = Enemigo(col_count * tile_size, row_count * tile_size + 15)
-                    blob_group.add(blob)
-                if tile == 4:   #Plataformas horizontales
-                    plataforma = Plataforma(col_count * tile_size, row_count * tile_size, 1, 0)
-                    platform_group.add(plataforma)
-                if tile == 5:   #Plataformas verticales
-                    plataforma = Plataforma(col_count * tile_size, row_count * tile_size, 0, 1)
-                    platform_group.add(plataforma)
-                if tile == 6:
-                    lava =  Lava(col_count * tile_size, row_count * tile_size + int(tile_size // 2))
-                    lava_group.add(lava)
-                if tile == 7:
-                    moneda = Moneda(col_count * tile_size + (tile_size // 2), row_count * tile_size - (tile_size//2))
-                    moneda_group.add(moneda)
-                if tile == 8:
-                    exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size//2))
-                    exit_group.add(exit)
-                
-                    
-                    
                 col_count += 1
             row_count += 1
+    def create_tile(self, tile_type, x, y):
+        dirt_img = pygame.image.load('img/dirt.png')
+        grass_img = pygame.image.load('img/grass.png')
+
+        img = pygame.transform.scale(dirt_img if tile_type == 1 else grass_img, (tile_size, tile_size))
+        img_rect = img.get_rect()
+        img_rect.x = x * tile_size
+        img_rect.y = y * tile_size
+        tile_instance = (img, img_rect)
+        self.tile_list.append(tile_instance)
+
 
     def draw(self):
         for tile in self.tile_list:
@@ -416,6 +401,34 @@ class Exit(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y 
+        
+# Factory method 
+class GameObjectFactory:
+    @staticmethod
+    def create_object(object_type, x, y, *args):
+        if object_type == "moneda":
+            objeto = Moneda(x, y)
+            moneda_group.add(objeto)
+        elif object_type == "enemigo":
+            objeto = Enemigo(x, y)
+            blob_group.add(objeto)
+        elif object_type == "plataforma":
+            objeto = Plataforma(x, y, *args)
+            platform_group.add(objeto)
+        elif object_type == "lava":
+            objeto = Lava(x, y)
+            lava_group.add(objeto)
+        elif object_type == "exit":
+            objeto = Exit(x, y)
+            exit_group.add(objeto)
+        # Agrega más tipos según sea necesario
+        else:
+            raise ValueError(f"Tipo de objeto no válido: {object_type}")
+        return objeto
+
+
+
+
 
 # Creación de instancias
 jugador = Jugador(100, screen_height - 130)
@@ -430,14 +443,20 @@ moneda_group = pygame.sprite.Group()
 moneda_score = Moneda(tile_size // 2, tile_size//2 )
 moneda_group.add(moneda_score)
 moneda_score.add_observer(jugador)
+
+
 #cargar el nivel desde data y crear el mudno
 
 with open(f'nivel{nivel}_data', 'r') as file:
     world_data_str = file.read()
     world_data = ast.literal_eval(world_data_str)
+    
+row_count = len(world_data)
+col_count = len(world_data[0])
 
 # Ahora puedes crear el objeto World con los datos cargados
 world = World(world_data)
+
 
 
 #botones

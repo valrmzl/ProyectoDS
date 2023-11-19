@@ -37,7 +37,7 @@ score = 0 #el de las monedas
 
 # cargar imagenes
 sun_img = pygame.image.load('img/sun.png')
-bg_img = pygame.image.load('img/sky.png')
+bg_img = pygame.image.load('img/pasillo.jpg')
 restart_img = pygame.image.load('img/restart_btn.png')
 start_img = pygame.image.load('img/start_btn.png')
 exit_img = pygame.image.load('img/exit_btn.png')
