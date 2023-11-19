@@ -30,6 +30,7 @@ blue = (0,0, 255)
 tile_size = 50
 game_over = 0
 main_menu = True
+jump_height = -15
 
 nivel = 1
 nivel_maximo = 2
@@ -124,24 +125,40 @@ class Button():
         
         return action
 
+
+def verificar_salto(func):
+    print("Si entra")
+    def wrapper(self):
+        func(self)  
+        if self.contador_monedas == 10:
+            print("10 MONEDAS")
+            global jump_height
+            jump_height -= 5 
+            self.contador_monedas = 0  
+    return wrapper
+
 # Clase para mostrar mi jugador
 class Jugador(Observable):
+    jump_height = -15
     def __init__(self, x, y):
        Observable.__init__(self)  # Agregar esta línea para inicializar la clase base
        self.reset(x,y)
+       self.contador_monedas = 0
 
     def update(self, game_over):
         dx = 0  # Variables creadas para detectar colisiones
         dy = 0
         walk_cooldown = 5
         col_thresh = 20
+        
 
         if game_over == 0:
             # Obtener clics
             key = pygame.key.get_pressed()
             if key[pygame.K_SPACE] and self.jumped == False and self.in_air == False:
+                global jump_height
                 jump_fx.play()
-                self.vel_y = -15
+                self.vel_y = jump_height
                 self.jumped = True
             if key[pygame.K_SPACE] == False:
                 self.jumped = False
@@ -249,11 +266,12 @@ class Jugador(Observable):
             
         return game_over
 
-    
+    @verificar_salto
     def recolectar_moneda(self):
         print("sonidooo")
         moneda_fx.play()
         self.notify_observers("Moneda recolectada")
+        self.contador_monedas += 1
         
 
     def reset(self,x,y):
