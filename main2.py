@@ -465,7 +465,7 @@ class PlayerSelection:
         while not seleccion_realizada:
             clock.tick(fps)
             screen.blit(bg_img, (0, 0))
-            draw_text('Selecciona a tu jugador', font, white, screen_width // 2 - 200, screen_height // 4)
+            draw_text('SELECT YOUR PLAYER', font, white, screen_width // 2 - 200, screen_height // 4)
 
             if sebas_btn.draw():
                 self.seleccionado = "Sebas"
