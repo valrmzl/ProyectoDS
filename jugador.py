@@ -149,7 +149,7 @@ class Jugador(Observable):
         return game_over
 
     @verificar_salto
-    def recolectar_moneda(self):
+    def recolectar_moneda(self)-> None:
         """
         Método que maneja la recolección de monedas por parte del jugador.
 
@@ -158,14 +158,14 @@ class Jugador(Observable):
         self.notify_observers("Moneda recolectada")
         self.contador_monedas += 1
 
-    def reset_salto(self):
+    def reset_salto(self)-> None:
         """
         Restablece la altura del salto a su valor predeterminado.
         """
         global jump_height
         jump_height = -15
 
-    def reset(self, x, y, nombre):
+    def reset(self, x, y, nombre)-> None:
         """
         Restablece las propiedades del jugador a su estado inicial.
 
