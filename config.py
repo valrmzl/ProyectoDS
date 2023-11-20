@@ -88,7 +88,7 @@ class Button():
         self.rect.y = y
         self.clicked = False
 
-    def draw(self):
+    def draw(self) -> bool:
         """
         Dibuja el botón en la pantalla y maneja las interacciones del mouse.
 

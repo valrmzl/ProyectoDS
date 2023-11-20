@@ -9,7 +9,7 @@ class Enemigo(pygame.sprite.Sprite):
     """
     Clase que representa a un enemigo en el juego.
     """
-    def __init__(self, x, y):
+    def __init__(self, x, y)-> None:
         """
         Inicializa un nuevo enemigo.
 
@@ -25,7 +25,7 @@ class Enemigo(pygame.sprite.Sprite):
         self.move_direction = 1
         self.move_counter = 0
     
-    def update(self):
+    def update(self)-> None:
         """
         Actualiza la posición del enemigo.
 
@@ -41,7 +41,7 @@ class Plataforma(pygame.sprite.Sprite):
     """
     Clase que representa una plataforma en el juego.
     """
-    def __init__(self, x, y, move_x, move_y):
+    def __init__(self, x, y, move_x, move_y)-> None:
         """
         Inicializa una nueva plataforma.
 
@@ -62,7 +62,7 @@ class Plataforma(pygame.sprite.Sprite):
         self.move_x = move_x
         self.move_y = move_y
 
-    def update(self):
+    def update(self)-> None:
         """
         Actualiza la posición de la plataforma.
 
@@ -98,7 +98,7 @@ class Moneda(pygame.sprite.Sprite, Observable):
     """
     Clase que representa una moneda en el juego.
     """
-    def __init__(self, x, y):
+    def __init__(self, x, y)-> None:
         """
         Inicializa una nueva moneda.
 
@@ -113,7 +113,7 @@ class Moneda(pygame.sprite.Sprite, Observable):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
     
-    def recolectar(self):
+    def recolectar(self)-> None:
         """
         Recolecta la moneda y notifica a los observadores.
 
@@ -126,7 +126,7 @@ class Exit(pygame.sprite.Sprite):
     """
     Clase que representa la salida en el juego.
     """
-    def __init__(self, x, y):
+    def __init__(self, x, y)-> None:
         """
         Inicializa una nueva salida.
 
